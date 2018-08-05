@@ -9,8 +9,11 @@ export class Controller {
 		res.set('Content-Type', 'application/json');
 		res.send(candles);
 	}
-	all(req: Request, res: Response): void {
-		ExamplesService.all().then(r => res.json(r));
+	trades(req: Request, res: Response): void {
+		console.log(process.cwd());
+		const candles=fs.readFileSync('../../../bitmexbot/allTrades.json', 'utf8');
+		res.set('Content-Type', 'application/json');
+		res.send(candles);
 	}
 }
 export default new Controller();
