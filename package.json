@@ -4,6 +4,7 @@
   "description": "tradebot view server",
   "main": "index.js",
   "scripts": {
+    "prestart":"node build.js && backpack build",
     "start": "cd build && node main",
     "compile": "node build.js && backpack build",
     "dev": "node build.js && backpack dev | pino -o 'short'",

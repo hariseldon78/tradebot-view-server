@@ -1,47 +1,16 @@
 import { Request, Response } from 'express';
 import l from '../../../common/logger'
+import * as fs from "fs";
+import ExamplesService from '../../services/examples.service';
 export class Controller {
-	config(req: Request, res: Response): void {
-		l.info(req.params);
-		res.json({
-			supports_search:false,
-			supports_group_request:true,
-			support_marks:false,
-			supports_timescale_marks:false,
-			supports_time:false,
-			exchanges:[{
-				value:'',
-				name:'bot simulation',
-				desc:''
-			}],
-			symbols_types: [{
-				name:'crypto',
-				value:''
-			}],
-			supported_resolutions: [
-				'1m'
-			]
-		});
+	candles(req: Request, res: Response): void {
+		console.log(process.cwd());
+		const candles=fs.readFileSync('../../../bitmexbot/lastCandles.json', 'utf8');
+		res.set('Content-Type', 'application/json');
+		res.send(candles);
 	}
-
-	symbolInfo(req: Request, res: Response): void {
-		res.json({
-			symbol:['XBTUSD'],
-			description:['bitcoin dollar'],
-			'exchange-listed':['bot simulation'],
-			'exchange-traded':['bot simulation'],
-			minmovement:[5],
-			pricescale:[10],
-			minmovement2:[0],
-			fractional:[false],
-			has_intraday:[true],
-			intraday_multipliers:['1'],
-			'has-no-volume':[true],
-			type:['bitcoin'],
-			timezone:['Etc/UTC'],
-			'session-regular':['24x7']
-
-				 });
+	all(req: Request, res: Response): void {
+		ExamplesService.all().then(r => res.json(r));
 	}
 }
 export default new Controller();
