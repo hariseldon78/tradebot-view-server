@@ -4,7 +4,7 @@
   "description": "tradebot view server",
   "main": "index.js",
   "scripts": {
-    "prestart":"node build.js && backpack build",
+    "prestart": "node build.js && backpack build",
     "start": "cd build && node main",
     "compile": "node build.js && backpack build",
     "dev": "node build.js && backpack dev | pino -o 'short'",
@@ -17,7 +17,9 @@
     "cookie-parser": "^1.4.3",
     "dotenv": "^4.0.0",
     "express": "^4.16.2",
+    "moment": "^2.22.2",
     "pino": "^4.17.5",
+    "request-promise": "^4.2.2",
     "source-map-support": "^0.4.15",
     "swagger-express-middleware": "^1.0.0-alpha.12"
   },
