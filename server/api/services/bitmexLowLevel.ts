@@ -67,6 +67,69 @@ export function candleFromBitmex(c) {
 	// I want each candle to have the timestamp of the open moment, not the close
 	return new Candle(c.open, c.close, c.high, c.low, c.volume, moment(c.timestamp).unix() - 60, 1);
 }
+
+export namespace OrderDirection {
+	export enum Direction {buy, sell}
+
+	export function invert(direction: Direction): Direction {
+		switch (direction) {
+			case Direction.buy:
+				return Direction.sell;
+			case Direction.sell:
+				return Direction.buy;
+		}
+	}
+
+	export function toString(direction: Direction): string {
+		switch (direction) {
+			case Direction.buy:
+				return 'buy';
+			case Direction.sell:
+				return 'sell';
+		}
+	}
+
+	export function toBitmexString(direction: Direction): string {
+		switch (direction) {
+			case Direction.buy:
+				return 'Buy';
+			case Direction.sell:
+				return 'Sell';
+		}
+	}
+
+	export function fromSign(n: number): Direction {
+		if (n < 0)
+			return Direction.sell;
+		else
+			return Direction.buy;
+	}
+
+	export function toSign(direction: Direction): number {
+		switch (direction) {
+			case Direction.buy:
+				return 1;
+			case Direction.sell:
+				return -1;
+		}
+	}
+}
+
+export interface TradeStats{
+	direction:OrderDirection.Direction;
+	openPrice:number;
+	stopLossDelta:number;
+	openTime:string;
+	closePrice:number;
+	closeTime:string;
+	quantity:number;
+	fees:number;
+	'in&Outs':number[];
+	'p&l':number;
+	openNotes:string;
+	closeNotes:string;
+}
+
 export class BitmexApi {
 	private NONCE_BASE: number=0;
 	readonly env: Env;
