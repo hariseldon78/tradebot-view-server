@@ -71,6 +71,15 @@ export function candleFromBitmex(c) {
 export namespace OrderDirection {
 	export enum Direction {buy, sell}
 
+	export function fromString(s:string): Direction {
+		switch (s) {
+			case 'Sell':
+				return Direction.sell;
+			case 'Buy':
+				return Direction.buy;
+		}
+	}
+
 	export function invert(direction: Direction): Direction {
 		switch (direction) {
 			case Direction.buy:

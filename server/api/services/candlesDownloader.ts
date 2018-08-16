@@ -43,21 +43,44 @@ export interface BitmexOrder {
 class Trade implements TradeStats {
 	openPrice: number;
 	openTime: string;
+	openNotes: string;
+	direction: OrderDirection.Direction;
+	quantity: number;
+	stopLossDelta: number;
 
 	constructor(open: BitmexOrder, stop: BitmexOrder, close: BitmexOrder | null = null) {
+		console.log('constructing trade:');
+		[open,stop,close].forEach(o=>console.log(o));
 		this.openPrice = open.price;
+		this.openTime = open.timestamp;
+		this.openNotes = open.text;
+		this.direction = OrderDirection.fromString(open.side);
+		this.fees = open.simpleCumQty*0.00075;
+		this.quantity = open.simpleCumQty;
+		this.stopLossDelta = Math.abs(stop.stopPx - open.price);
+		if (close) {
+			this.closePrice = close.price;
+			this.closeTime = close.timestamp;
+			this.closeNotes = close.text;
+			this.fees += close.simpleCumQty*0.00075;
+		} else {
+			this.closePrice = stop.price;
+			this.closeTime = stop.timestamp;
+			this.closeNotes = stop.text;
+			this.fees += stop.simpleCumQty*0.00075;
+		}
+		this['in&Outs'].push(OrderDirection.toSign(this.direction)*this.quantity*this.openPrice);
+		this['in&Outs'].push(-1*this.fees);
+		this['in&Outs'].push(OrderDirection.toSign(OrderDirection.invert(this.direction))*this.quantity*this.closePrice);
+		this['p&l']=this['in&Outs'].reduce((a,e)=>a+e);
 	}
 
-	'in&Outs': number[];
+	'in&Outs': number[]=[];
 	'p&l': number;
 	closeNotes: string;
 	closePrice: number;
 	closeTime: string;
-	direction: OrderDirection.Direction;
 	fees: number;
-	openNotes: string;
-	quantity: number;
-	stopLossDelta: number;
 }
 
 export async function bitmexTrades(env: Env): Promise<TradeStats[]> {
@@ -72,7 +95,7 @@ export async function bitmexTrades(env: Env): Promise<TradeStats[]> {
 			startTime: from,
 			endTime: to,
 		});
-	console.log(allOrders);
+	// console.log(allOrders);
 	let matchedOrders: string[] = [];
 
 	function isOpen(order: BitmexOrder) {
@@ -84,7 +107,7 @@ export async function bitmexTrades(env: Env): Promise<TradeStats[]> {
 	}
 
 	function isClose(order: BitmexOrder) {
-		return order.ordType == 'MarketWithLeftoverAsLimit' && order.ordStatus == 'Filled';
+		return order.ordType == 'MarketWithLeftOverAsLimit' && order.ordStatus == 'Filled';
 	}
 
 	const firstOpenIndex = allOrders.findIndex(isOpen);
@@ -95,25 +118,31 @@ export async function bitmexTrades(env: Env): Promise<TradeStats[]> {
 	let trades = [];
 	for (let i = firstOpenIndex; i < allOrders.length; i++) {
 		const order = allOrders[i];
+		console.log(`Order n° ${i} state:${state} ${order.ordType}, ${order.ordStatus}.`)
+		if (order.ordStatus=='New') break;
 		switch (state) {
 			case 0:
 				if (!isOpen(order)) throw Error('unable to reconstruct trades');
+				console.log(`is open`)
 				openOrder = order;
 				state++;
 				break;
 			case 1:
 				if (order.ordStatus != 'Filled') throw Error('unable to reconstruct trades');
 				if (isStopLoss(order)) {
+					console.log(`is stop filled`)
 					stopLoss = order;
 					state = 0;
 					trades.push(new Trade(openOrder, stopLoss));
 				} else if (isClose(order)) {
+					console.log(`is close`)
 					closeOrder=order;
 					state++;
 				} else throw Error('unable to reconstruct trades');
 				break;
 			case 2: // waiting stopLoss canceled
 				if (!isStopLoss(order)) throw Error('unable to reconstruct trades');
+				console.log(`is stop`)
 				stopLoss = order;
 				state = 0;
 				trades.push(new Trade(openOrder, stopLoss, closeOrder));
