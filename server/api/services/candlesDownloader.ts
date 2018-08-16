@@ -69,9 +69,9 @@ class Trade implements TradeStats {
 			this.closeNotes = stop.text;
 			this.fees += stop.simpleCumQty*0.00075;
 		}
-		this['in&Outs'].push(OrderDirection.toSign(this.direction)*this.quantity*this.openPrice);
+		this['in&Outs'].push(OrderDirection.toSign(OrderDirection.invert(this.direction))*this.quantity*this.openPrice);
 		this['in&Outs'].push(-1*this.fees);
-		this['in&Outs'].push(OrderDirection.toSign(OrderDirection.invert(this.direction))*this.quantity*this.closePrice);
+		this['in&Outs'].push(OrderDirection.toSign(this.direction)*this.quantity*this.closePrice);
 		this['p&l']=this['in&Outs'].reduce((a,e)=>a+e);
 	}
 
